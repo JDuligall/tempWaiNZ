@@ -9,6 +9,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
 //import android.media.audiofx.BassBoost.Settings;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -27,7 +28,8 @@ import com.google.android.gms.maps.model.LatLng;
 public class MainActivity extends FragmentActivity implements LocationListener {
 
 	GoogleMap googleMap;
-
+	boolean isOffline = false;
+	
 	private LatLng previousLoc = new LatLng(0, 0);
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +41,19 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 		// checkGPS
 		isGPSenabled();
-
+		if(!isNetworkAvailable()){
+			//initial check
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage("No internet connection found. GPS may not be accurate if indoors.")
+			.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					//Nothing should happen
+				}
+			});
+			builder.create();
+			builder.show();
+			isOffline = true;
+		}
 
 			// Showing status
 			if (status != ConnectionResult.SUCCESS) { // Google Play Services
@@ -102,6 +116,19 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		}
 		previousLoc = latLng;
 
+	}
+	
+	/**Online connectivity check*/
+	public boolean isNetworkAvailable() {
+		ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+		// test for connection
+		if (cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isAvailable()
+				&& cm.getActiveNetworkInfo().isConnected()) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public void isGPSenabled() {
